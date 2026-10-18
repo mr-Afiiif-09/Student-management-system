@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Management Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-mark">S</div>
+      <div class="brand-copy">
+        <strong>StudentHub</strong>
+        <span>Management System</span>
+      </div>
+      <div class="sidebar-label">WORKSPACE</div>
+      <a class="nav-link active" href="{{ url_for('index') }}"><span>▦</span> Dashboard</a>
+      <div class="sidebar-note">
+        <span class="note-dot"></span>
+        <div><strong>Local storage</strong><small>Records saved in JSON</small></div>
+      </div>
+      <div class="sidebar-footer">Built with Python + Flask</div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">OVERVIEW</p>
+          <h1>Student dashboard</h1>
+          <p class="subtitle">Manage student records from one simple workspace.</p>
+        </div>
+        <div class="avatar">A</div>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="stats-grid">
+        <article class="stat-card">
+          <div class="stat-icon purple">♙</div>
+          <div><p>Total students</p><strong>{{ total }}</strong><small>Records in your system</small></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon blue">↗</div>
+          <div><p>Average marks</p><strong>{{ "%.1f"|format(average) }}<span class="unit">/ 100</span></strong><small>Across all students</small></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon green">✓</div>
+          <div><p>System status</p><strong>Active</strong><small>JSON storage enabled</small></div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel form-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">STUDENT RECORDS</p><h2>Add a student</h2></div>
+            <span class="heading-icon">＋</span>
+          </div>
+          <p class="panel-description">Enter the details below to create a new record.</p>
+          <form action="{{ url_for('add_student') }}" method="post" class="student-form">
+            <label for="name">Full name</label>
+            <input id="name" name="name" type="text" placeholder="e.g. Aditi Sharma" required maxlength="100">
+            <label for="roll">Roll number</label>
+            <input id="roll" name="roll" type="number" placeholder="e.g. 108" min="0" required>
+            <label for="marks">Marks <span class="label-hint">0–100</span></label>
+            <input id="marks" name="marks" type="number" placeholder="e.g. 85" min="0" max="100" step="0.01" required>
+            <button class="primary-button" type="submit">＋ Add student</button>
+          </form>
+        </article>
+
+        <article class="panel table-panel">
+          <div class="panel-heading table-heading">
+            <div><p class="eyebrow">DIRECTORY</p><h2>All students <span class="count-pill">{{ students|length }}</span></h2></div>
+            <form class="search-form" action="{{ url_for('index') }}" method="get">
+              <span>⌕</span>
+              <input name="q" value="{{ query }}" placeholder="Search name or roll..." aria-label="Search students">
+              {% if query %}<a class="clear-search" href="{{ url_for('index') }}">Clear</a>{% endif %}
+            </form>
+          </div>
+
+          {% if students %}
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>STUDENT</th><th>ROLL NO.</th><th>MARKS</th><th>ACTIONS</th></tr></thead>
+                <tbody>
+                  {% for student in students %}
+                    <tr>
+                      <td><div class="student-cell"><span class="student-avatar">{{ student.name[:1]|upper }}</span><div><strong>{{ student.name }}</strong><small>Student</small></div></div></td>
+                      <td><span class="roll-chip">#{{ student.roll }}</span></td>
+                      <td><div class="marks-cell"><strong>{{ "%.2f"|format(student.marks)|replace(".00", "") }}</strong><div class="marks-track"><span style="width: {{ [student.marks, 100]|min }}%"></span></div></div></td>
+                      <td><div class="actions">
+                        <a class="icon-button edit" href="{{ url_for('edit_student', roll=student.roll) }}" title="Edit {{ student.name }}" aria-label="Edit student">✎</a>
+                        <form action="{{ url_for('delete_student', roll=student.roll) }}" method="post" onsubmit="return confirm('Delete this student record?');">
+                          <button class="icon-button delete" type="submit" title="Delete {{ student.name }}" aria-label="Delete student">×</button>
+                        </form>
+                      </div></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">▤</div>
+              <h3>{{ "No matching students" if query else "No student records yet" }}</h3>
+              <p>{{ "Try another name or roll number." if query else "Add your first student using the form." }}</p>
+            </div>
+          {% endif %}
+          <div class="table-footer"><span>Showing {{ students|length }} record(s)</span><span>StudentHub · v1.0</span></div>
+        </article>
+      </section>
+      <footer class="page-footer">StudentHub <span>•</span> A simple student record manager</footer>
+    </main>
+  </div>
+</body>
+</html>
